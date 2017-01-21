@@ -1,6 +1,6 @@
 ---
 title: "Lab 1"
-author: "Saul Grimaldo and Melwin Poovakottu"
+author: "Saul Grimaldo, Melwin Poovakottu, Anirudh Mittal"
 date: "1/18/2017"
 output: pdf_document
 ---
