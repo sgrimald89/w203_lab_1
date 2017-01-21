@@ -11,8 +11,6 @@ setwd("../data/")
 load("ceo_w203.RData")
 ```
 
-You can also embed plots, for example:
-
 ```{r, echo=FALSE}
 # We don't know how the option on education was presented. Perhaps it was set up so that a person can click on multiple educational levels in a single question, and some people who clicked on grad school but not college were unaware of this. Under this analysis, we'll accept this as a true assumption
 CEO$education = as.factor(with(CEO, ifelse(grad == 1, 2, ifelse(college == 1, 1, 0))))
