@@ -80,9 +80,6 @@ Below, we can see the range in CEO company tenure going from 2 to 58, with the m
 summary(CEO$comten)
 ```
 
-We can also see some interesting trends when we compare the company tenure for CEOs with a graduate-level education with those who don't have one.
-
-
 #Bivariate Relationships
 
 ##Education vs Profit
