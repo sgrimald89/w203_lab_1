@@ -19,7 +19,7 @@ We operationalize the concept of performance through the use of profits as a pro
 
 We will examine whether we can say that a higher salary is related to better company performance.
 
-#### Data Coding
+####Data Modification, Data Encoding, and Dubious Data Points
 
 
 For this analysis, we assumed that if a CEO  reported completing a graduate degree, they must have also completed college. This affected 2 data points in the CEO data set.
@@ -32,10 +32,13 @@ CEO$unaltered_college = CEO$college
 CEO$college = ifelse(CEO$grad == 1, 1,CEO$unaltered_college)
 ```
 
-Furthermore, we encountered cases where market value and profits are set to -1. In the case of profits, this is acceptable, but only 5 data points showed a market value of less than 0. We believe that missing values were encoded as -1, so if profits and market value are both -1 at the same time, we updated both the values to be missing.
+Furthermore, we encountered cases where market value and profits are set to -1. In the case of profits, this is acceptable, but only 5 data points showed a market value of less than 0 and they were all -1. Furthermore, we see that profits are -1 only when market value is also -1. As such, we updated these values to be NA.
 
 ```{r}
 nrow(subset(CEO, mktval == -1))
+nrow(subset(CEO, profits == -1))
+nrow(subset(CEO, mktval == -1 & profits == -1))
+
 CEO$unaltered_mktval = CEO$mktval
 CEO$unaltered_profits = CEO$profits
 CEO$mktval = ifelse(CEO$unaltered_mktval == -1, NA, CEO$unaltered_mktval)
@@ -51,21 +54,35 @@ CEO = subset(CEO, comten >= ceoten)
 ```
 
 ##Exploration of profits
+
 We begin our analysis by looking at profits, the variable of interest.
 
 ```{r}
 ggplot(CEO,aes(x = profits)) +
-  geom_histogram(color=as.factor(1), binwidth = 50, na.rm = T)
+  geom_histogram(color=as.factor(1), binwidth = 50, na.rm = T) +
+    ggtitle("Distribution of 1990 Profits (in millions of US $)") + 
+     labs(x = "Profits", y = "Count of Companies")
 ```
 
-Profits, are highly skewed to the right with the majority of CEO's working at companies making between $50 million and $100 million in profits. 
+Profits, are highly skewed to the right with the majority of CEO's working at companies making between $50 million and $100 million in profits in 1990. 
+
+We thus see that most of the companies we are studying are largely fairly successful companies. 
+
+```{r}
+summary(CEO$profits)
+```
+
+We see a fascinating phenomenon here. Due to the large skew in the data, the mean of profits is closer to the third quartile of profits than it is to the median. 
 
 ##Exploration of Salary
 
 We next explore salary.
 
 ```{r}
-ggplot(CEO,aes(x = salary))+geom_histogram(color=as.factor(1), binwidth = 100) + ggtitle("Salary")
+ggplot(CEO,aes(x = salary)) + 
+  geom_histogram(color=as.factor(1), binwidth = 100) +
+   ggtitle("Distribution of CEO 1990 Compensation (in Thousands of US $)") + 
+    labs(x = "Compensation", y = "Count of CEOs")
 ```
 
 We can see that salary, like profits, has a strong right skew. However, data is more dispersed.
@@ -75,8 +92,16 @@ We can see that salary, like profits, has a strong right skew. However, data is 
 summary(CEO$salary)
 ```
 
-We can also see that the salary varies fairly dramatically with the first quartile being as low as $467,000 and the third quartile being at $1,101,00
+We can also see that the salary varies fairly dramatically with the first quartile being at $467,000 and the third quartile being at $1,101,00.
 
+```{r}
+ggplot(CEO, aes(x = "CEOs", y = salary, color = as.factor(1))) +
+  geom_boxplot() + ggtitle("Range of CEO Compensation") + 
+  labs(x = "", y = "1990 CEO Compensation - $1000's" ) + theme(legend.position="none")
+
+```
+
+There's also a fair amount of outlier CEOs earning more than $2 million.
 
 ##Exploration of Education
 
@@ -106,21 +131,27 @@ sum(CEO$grad) / nrow(CEO)
 
 Because of the minimal amount of data in our data set for CEOs with no education, we will focus education related questions on graduate level education.
 
+```{r}
+#transforms the grad variable into a factor variable for future analysis
+CEO$grad = as.factor(CEO$grad)
+```
 
 ##Exploration of company tenure
 
 Next, we'll explore the company tenure variable.
 
 ```{r}
-ggplot(CEO, aes(x = comten)) + geom_histogram(color = as.factor(1), bins = 30)
+ggplot(CEO, aes(x = comten)) + geom_histogram(color = as.factor(1), bins = 30) +
+  ggtitle("Distribution of CEO's Tenure Within Current Company") +
+  labs(x = "CEO Tenure Within Company", y = "Number of CEO's")
 
 ```
 
 We can see a large spike in the number of CEOs with low amounts of company tenure. This likely corresponds to CEOs who were hired from out of the company.
 
-There is also a large bump in the number of CEOs who had 30 - 36 years of company tenure.
+There is also a large bump in the number of CEOs who had 30 - 36 years of company tenure. Perhaps this is a signal that companies value promoting from within as employees who know the business well, which is something an employee will accomplish with experience working at the same business for a long period of time, will be able to make the best decisions.
 
-Finally, we can see the number of CEOs with more than 36 years of experience dropping off dramatically. This likely represents CEOs who entered retirement.
+Finally, we can see the number of CEOs with more than 36 years of experience dropping off dramatically. This is likely driven by CEO's entering retirement.
 
 ```{r}
 subset(CEO, comten == 58)
@@ -132,43 +163,78 @@ Below, we can see the range in CEO company tenure going from 2 to 58, with the m
 summary(CEO$comten)
 ```
 
+##Exploration of Tenure of CEO as a CEO
+
+```{r}
+ggplot(subset(CEO,ceoten > 0),aes(x = ceoten)) +
+  geom_histogram(color=as.factor(1),binwidth=3) +
+  ggtitle("CEO's Tenure as CEO at Current Company") +
+  labs(x = "CEO's Tenure as CEO", y = "Count of CEO's") 
+```
+
+The CEO's tenure has a right skew with 75% of CEO's having a tenure of less than 11 years.
+
+As expected from a righward skew distribution the median and mean are fairly different as well.
+
+```{r}
+summary(CEO$ceoten)
+```
+
 ##Market Value Exploration
 
 We now explore market value.
 
 ```{r}
-ggplot(CEO,aes(x = mktval))+ geom_histogram(binwidth = 1000, color = as.factor(1))
+ggplot(CEO,aes(x = mktval))+ geom_histogram(binwidth = 1000, color = as.factor(1)) +
+  ggtitle("Distribution of 1990 Company Market Values (in Millions of $)") +
+   labs(x = "Market Value of Company", y = "Count of Companies")
 ```
 
 Like salary and profits, we see a strong rightward skew in our data for market value.
 
-In this case, market value, similar to profits, has a large number of data points in the $1 billion - $2 billion market value range.
+In this case, market value, similar to profits, is highly clustered. However it is clustered in the $1 billion - $2 billion market value range.
+
+```{r}
+summary(CEO$mktval)
+```
+
+As expected, due to the large skew in the market value, we see that the mean and median are not close close and the interquartile range is over $2,900,000.
 
 ##Exploration of Age
 
 
-Looking at the histogram of age, we can see that the variable is close to a  normally distributed curve with the mean(55) and median(57) with a drop after the age of 65, the age of retirement in the US.
+Looking at the histogram of age, we can see that the variable is close to a  normally distributed curve with a drop after the age of 65, the age of retirement in the US.
 
 ```{r}
-ggplot(CEO,aes(x = age))+ geom_histogram(binwidth = 3, color = as.factor(1))
+ggplot(CEO,aes(x = age))+ geom_histogram(binwidth = 5, color = as.factor(1)) + 
+  ggtitle("Distribution of CEO Age") + labs(x = "Age of CEO", y = "Count of CEOs")
 ```
+
+The mean and median age for CEOs are fairly close with a mean of about 56 and a median of 57. Furthermore, half of CEOs are between 51 and 61 years old.
+
+```{r}
+summary(CEO$age)
+```
+
 
 #Bivariate Relationships
 
 ##Salary vs Profits
 
-First, we examine the correlation between profits and salary. We transform salary to account for the high level of dispersion in salary values and since it never has a negative value
+First, we examine the correlation between profits and salary.
 
 ```{r}
-ggplot(CEO,aes(x = log(salary), y = profits)) +
-  geom_point() +stat_smooth(method = "lm", se = F) 
+ggplot(CEO,aes(x = salary, y = profits, color = grad)) +
+  geom_point(na.rm = T) +stat_smooth(method = "lm", se = F, na.rm = T) +
+   ggtitle("Correlation Between 1990 CEO Compensation and Profits") + 
+    labs(x = "CEO Compensation in $1000's", y = "Company Profits in $Millions")
 ```
 
 ```{r}
-cor(log(CEO$salary), CEO$profits, use = "pairwise.complete.obs")
+cor(CEO$salary, CEO$profits, use = "pairwise.complete.obs")
 ```
 
-We see that, indeed, salary and profits are relatively well correlated with a correlation coefficient of .3979.
+We see that, indeed, salary and profits are relatively well correlated with a correlation coefficient of .399. 
 
 
 ##Education vs Profit
@@ -176,13 +242,36 @@ We see that, indeed, salary and profits are relatively well correlated with a co
 Next, we'll examine the profits for companies run by those with a graduate level education versus those without it.
 
 ```{r}
-CEO$grad = as.factor(CEO$grad)
 ggplot(CEO, aes(x = grad, y = profits, color = grad)) +
-  geom_boxplot(na.rm = T)
+  geom_boxplot(na.rm = T) + ggtitle("Correlation Between Education and Profits") +
+    labs(x = "CEO Has Graduate Degree?", y = "Company 1990 Profits $Millions") +
+     theme(legend.position="none") 
 ```
 
 Looking at the relationship between education and profits, we can immediately see that both the 25th and 75th percentile for CEOs with graduate degrees is higher than that of the CEOs without a graduate degree.
 
+Because of this, we now explore how education might affect the correlation between salary and profits.
+
+```{r}
+ggplot(CEO, aes(x = salary, y = profits, color = grad)) +
+  geom_point(na.rm = T) + stat_smooth(method = "lm", se = F, na.rm = T) +
+   ggtitle("Correlation Between 1990 CEO Compensation and Profits") + 
+    labs(x = "CEO Compensation in $1000's", y = "Company Profits in $Millions") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
+
+```
+
+We see two outliers in the above chart that may be causing the estimation of correlation for non-graduate degree holders to be artificially low, so for this analysis we will remove CEOs with a salary of > $2,000,000. Perhaps the high pay of these CEOs is a sign of more problems within the company and thus why the profits are so low, or perhaps these data points represent companies with a low market value that hired a CEO that they hope will lead to greater growth. Regardless, these data points are outliers that make our analysis less meaningfull.
+
+```{r}
+ggplot( subset(CEO, salary < 2000), aes(x = salary, y = profits, color = grad)) +
+  geom_point(na.rm = T) +stat_smooth(method = "lm", se = F, na.rm = T) +
+   ggtitle("Correlation Between 1990 CEO Compensation and Profits") + 
+    labs(x = "CEO Compensation in $1000's", y = "Company Profits in $Millions") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
+```
+
+We now see a stronger relationship between salary and profits for non graduate degree holders. Still, the relationship is stronger for those holding a graduate degree, and we can see that, typically, someone with the same salary who holds a graduate degree tends to correlate to higher profits than someone at that same salary level without a graduate degree.
 
 ##Company Tenure vs Profits
 
@@ -190,7 +279,9 @@ Next, we will examine the correlation between company tenure and profits
 
 ```{r}
 ggplot(CEO, aes(x = comten, y = profits)) + geom_point(na.rm = T) +
-    stat_smooth(method = "lm", se = FALSE, na.rm = T)
+  stat_smooth(method = "lm", se = FALSE, na.rm = T) +
+  labs(x = "CEO's Tenure in Company", y = "1990 Profits in $Millions") +
+  ggtitle("Correlation Between CEO's Company Tenure and Profits")
 ```
 
 While most data points are clustered closer to the 0 - 1000 range for all company tenure levels, we see that there are more high profits for companies with CEOs with high company tenure, though the same is true for negative profits.
@@ -205,22 +296,58 @@ We now explore how the correlation of company tenure on profits changes based on
 
 ```{r}
 ggplot(CEO, aes(x = comten, y = profits, color = grad)) + geom_point(na.rm = T) + 
-    stat_smooth(method = "lm", se = FALSE, na.rm = T)
+    stat_smooth(method = "lm", se = FALSE, na.rm = T) +
+  labs(x = "CEO's Tenure in Company", y = "1990 Profits in $Millions") +
+  ggtitle("Correlation Between CEO's Company Tenure and Profits") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
 
 ```
 
-We can see a very interesting trend here. The group of companies with a CEO who received a graduate-level education had a higher correlation between company tenure and profits. 
+We can see a very interesting trend here. The group of companies with a CEO who received a graduate-level education had a higher correlation between the CEO's company tenure and profits. 
 
  
 ##Tenure as CEO vs profits
+
 Next, we see the relationship between tenure as CEO vs profits.
 
 ```{r}
-ggplot(CEO,aes(x = ceoten, y = profits, color = grad)) + 
-  geom_point(na.rm = T) + stat_smooth(method = "lm", se = F, na.rm = T)
+ggplot(CEO ,aes(x = ceoten, y = profits, color = grad)) + 
+  geom_point(na.rm = T) + stat_smooth(method = "lm", se = F, na.rm = T) +
+  labs(x = "CEO's Tenure as CEO in Company", y = "1990 Profits in $Millions") +
+  ggtitle("Correlation Between CEO's Tenure as CEO and Profits") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
 ```
 
-Interestingly enough, we see that ceo tenure and profits are more strongly correlated when the CEO has a graduate degree than when they don't. In fact we also see that there is a negative correlation between tenure as CEO vs profits.
+We see some odd behavior in the correlation between tenure as CEO and profits, so like before we remove the odd data points with CEOs who had salaries greater than $2,000,000. 
+
+```{r}
+ggplot(subset(CEO, salary <2000) ,aes(x = ceoten, y = profits, color = grad)) + 
+  geom_point(na.rm = T) + stat_smooth(method = "lm", se = F, na.rm = T) +
+  labs(x = "CEO's Tenure as CEO in Company", y = "1990 Profits in $Millions") +
+  ggtitle("Correlation Between CEO's Tenure as CEO and Profits") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
+```
+
+We now see a very interesting story. It seems tenure as a CEO is not correlated with profits, regardless of education level. 
+
+What exactly does this imply? Perhaps the knowledge gathered as a CEO is not as important as the knowledge gathered working in roles other than CEO. 
+
+We explore this question further by looking at tenure at the company prior to becoming CEO.
+
+##Tenure at Company Prior to Becoming CEO vs Profits
+
+As we saw in the previous sections, there is a correlation between company tenure and profits but not in tenure as a CEO and profits. So we'd like to explore how strongly correlated years at the company before becoming CEO is with profits.
+
+```{r}
+CEO$tenure_before_CEO = CEO$comten - CEO$ceoten
+ggplot(CEO, aes(x = tenure_before_CEO, y = profits, color = grad)) +
+  geom_point(na.rm = T) + stat_smooth(method = "lm", se = F, na.rm = T) + 
+  labs(x = "CEO's Company Tenure Before Becoming CEO", y = "1990 Profits in $Millions") +
+  ggtitle("Correlation Between CEO's Company Tenure Before Becoming CEO") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
+```
+
+Again we see a stronger correlation between tenure before becoming CEO for those with a graduate degree than those without one. Furthermore, this also seems to further corroborate the idea that perhaps knowing more about the day-to-day details of working at a given company allows a CEO to perform better as a company leader and thus allows the company to earn higher profits.
 
 ##Tenure as CEO vs Salary
 
@@ -230,10 +357,15 @@ Because of the level of dispersion between tenure as CEO and salary, we perform 
 
 ```{r}
 ggplot(CEO,aes(x = ceoten, y = log(salary), color = grad)) + 
-  geom_point() + stat_smooth(method = "lm", se = F)
+  geom_point() + stat_smooth(method = "lm", se = F) + 
+  labs(x = "CEO's Tenure as CEO", y = "Log of Salary (in $1000's)") +
+  ggtitle("Correlation Between CEO's Tenure as CEO and Salary") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
 ```
 
 We see that there is a fairly strong linear relationship between tenure as CEO and salary, and that the correlation is roughly similar regardless of education level.
+
+This is expected. The more experience someone has doing a role, we would normally expect them to get paid well. The fact that salaries are so close for CEO's with a graduate degree and those without it is, however, surprising, especially given that profits are typically higher for companies that have a CEO with a graduate level education.
 
 ##Market Value vs Salary
 
@@ -241,7 +373,9 @@ As we showed earlier, both market value and salary have similar distributions th
 
 ```{r}
 ggplot(CEO,aes(x = log(mktval), y = log(salary))) + 
-  geom_point(na.rm = T) + stat_smooth(na.rm = T, method = "lm", se = F)
+  geom_point(na.rm = T) + stat_smooth(na.rm = T, method = "lm", se = F)  + 
+  labs(x = "Log of Company's 1990 Market Value in $Millions", y = "Log of CEO Salary in $1000's") +
+  ggtitle("Correlation Between Company Market Value  and CEO Salary")
 ```
 
 We see a fairly strong correlation between the log of market value and the log of salary, and in fact, with a correlation coefficient of .48, we see that indeed there is a correlation between the two variables.
@@ -250,37 +384,78 @@ We see a fairly strong correlation between the log of market value and the log o
  cor(log(CEO$mktval), log(CEO$salary), use =  "pairwise.complete.obs")
 ```
 
+One potential explanation for this correlation is that companies with higher market value also typically have more money than those that have low market value. As such they can afford to pay their employees higher. The CEO, having to oversee, theoretically, a more complicated business will also be able to demand a higher wage.
+
 ##Market Value vs Profits
 
 Finally, we explore the correlation between market value and profits. Since profits can be negative, no transformation is performed on it, but it is performed on market value.
 
 ```{r}
 ggplot(CEO,aes(x = mktval, y = profits)) + 
-  geom_point(na.rm = T) + stat_smooth(na.rm = T, method = "lm", se = F)
+  geom_point(na.rm = T) + stat_smooth(na.rm = T, method = "lm", se = F) + 
+  labs(x = "Company's 1990 Market Value in $Millions", y = "Company Profits in $Millions") +
+  ggtitle("Correlation Between Company Market Value  and Company Profits")
 ```
 
-We see a strong linear relationship between the market value of profits, and indeed with a correlation coefficient of .91, this is the strongest correlation we've seen in this data.
+We see a strong linear relationship between the market value of profits, and indeed with a correlation coefficient of .91, this is the strongest correlation we've seen in this data. 
 
 ```{r}
  cor(CEO$mktval, CEO$profits, use =  "pairwise.complete.obs")
 ```
 
+Nothing too surprising comes out of this analysis. It makes sense that a company with higher profits also has a higher market value.
+
+##Market Value and CEO's Company Tenure Before Becoming CEO
+
+We now explore how a company's value might correlate with a CEO's tenure at a company before he or she becomes a CEO.
+
+```{r}
+ggplot(CEO, aes( x = tenure_before_CEO, y = log(mktval), color = grad)) + 
+  geom_point(na.rm = T) + stat_smooth(method = "lm", se = F, na.rm = T) + 
+  labs(x = "CEO's Tenure at Company Before Becoming CEO", y = "Log of Market Vallue in $Millions") +
+  ggtitle("Correlation Between CEO's Tenure at Company Before Becoming CEO  and Market Value") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
+```
+
+We see here that there is a correlation between the CEO's tenure at a company before he or she becomes a CEO and the market value of the company. However this correlation is a lot less meaningful for CEO's without a graduate degree.
+
+The true meaning of this is difficult to asses. Perhaps large companies simply prefer promoting from within and tend to demand more education from their employees. Alternatively, the knowledge a CEO is able to collect before becoming a CEO allows him or her to understand the impact of his or her decisions. 
+
+##Age and Company Tenure
+
+Out of curiosity, we wanted to explore why we saw the company tenure of a CEO drop off after 36 and to confirm our theory that this typically correlated with a CEO hitting retirement age, so we plotted age and company tenure against each other
+
+```{r}
+ggplot(CEO,aes(y = comten, x = age, color = grad)) + 
+  geom_point() + geom_vline(xintercept= 65) + geom_hline(yintercept = 36) + 
+  labs(x = "CEO's Age", y = "CEO's Tenure at Company") +
+  ggtitle("Correlation Between CEO's Age and Their Tenure at Company") + 
+  scale_x_continuous(breaks=c(30,40,50,60,65,70,80)) + scale_y_continuous(breaks=c(0,20,36,40,60)) +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
+```
+
+The upper right square represents CEOs who are older than 65 and who have a company tenure greater than 36. Indeed, we see very few data points in the upper left quadrant, representing CEOs with more than 36 years of company tenure who are younger than 65, so 36 years of company tenure seems to be close to when most CEOs hit their age of retirement.
+
+Furthermore, we also see that CEO's with a graduate degree tend to be older than those who don't have a graduate degree for each level of company tenure. This makes sense. They finish school later, so they don't enter the job market until later. Further more we also see that there are more young CEOs with graduate degrees.
+
 ###Confounding Effects
 
 Correlation is often confused for causation, so it is important to correctly assess what the data is saying. For instance, we saw that salary is correlated with years of experience, market value of the company, and in deed, profits. 
 
-However, we also saw that profits is correlated with company tenure, education, market value, and profits. 
+However, we also saw that profits is correlated with company tenure, education, market value, and. 
 
 Since multiple correlations exist, it is very possible that for instance, higher education and experience combined allow a CEO to learn how businesses run effectively and thus lead to higher profits, and because the educated and experienced CEO has a history of showing good results, they would demand a higher salary. 
 
 Alternatively, it is also possible that simply having a higher salary would motivate a CEO to perform better.
 
-Another alternative could be that companies with high profits tend to have the budget to hire a CEO with a good performance record and pay him/her a very competetive salary. 
+Another alternative could be that companies with high profits and market values tend to have the budget to hire a CEO with a good performance record and pay himor her a very competetive salary. 
 
 To understand the true nature of these correlations, it would be necessary to use more advanced modeling techniques.
 
-###Conculsion
+###Conclusion
 
 As explained in the previous section of this report, without a deeper analysis of the data set, it is difficult to conclusively say what the true nature of the relationship between salary and profits other than that they are correlated with each other.
+
+However salary and profits are both correlated with a CEO's company tenure, a company's market value and many more variables.  
 
 
