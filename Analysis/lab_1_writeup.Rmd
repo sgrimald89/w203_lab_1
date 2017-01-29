@@ -11,7 +11,7 @@ library(ggplot2)
 load("ceo_w203.RData")
 
 ```
-###Introduction
+#Introduction
 
 We were tasked to determine whether company performance is related to a CEO's salary. To answer this question, we will explore a CEO data set containing the salaries of 185 CEOs.
 
@@ -19,7 +19,7 @@ We operationalize the concept of performance through the use of profits as a pro
 
 We will examine whether we can say that a higher salary is related to better company performance.
 
-####Data Modification, Data Encoding, and Dubious Data Points
+#Data Modification, Data Encoding, and Dubious Data Points
 
 
 For this analysis, we assumed that if a CEO  reported completing a graduate degree, they must have also completed college. This affected 2 data points in the CEO data set.
@@ -53,6 +53,7 @@ print(subset(CEO, ceoten > comten))
 CEO = subset(CEO, comten >= ceoten)
 ```
 
+#Univariate Data Analysis
 ##Exploration of profits
 
 We begin our analysis by looking at profits, the variable of interest.
@@ -219,7 +220,7 @@ summary(CEO$age)
 ```
 
 
-#Bivariate Relationships
+#Multivariate Data Analysis
 
 ##Salary vs Profits
 
@@ -441,7 +442,7 @@ The upper right square represents CEOs who are older than 65 and who have a comp
 
 Furthermore, we also see that CEO's with a graduate degree tend to be older than those who don't have a graduate degree for each level of company tenure. This makes sense. They finish school later, so they don't enter the job market until later. Further more we also see that there are more young CEOs with graduate degrees.
 
-###Confounding Effects
+#Confounding Effects
 
 Correlation is often confused for causation, so it is important to correctly assess what the data is saying. For instance, we saw that salary is correlated with years of experience, market value of the company, and in deed, profits. 
 
@@ -455,7 +456,7 @@ Another alternative could be that companies with high profits and market values 
 
 To understand the true nature of these correlations, it would be necessary to use more advanced modeling techniques.
 
-###Conclusion
+#Conclusion
 
 As explained in the previous section of this report, without a deeper analysis of the data set, it is difficult to conclusively say what the true nature of the relationship between salary and profits other than that they are correlated with each other.
 
