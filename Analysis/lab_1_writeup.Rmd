@@ -7,7 +7,7 @@ output: pdf_document
 
 ```{r}
 library(ggplot2)
-setwd("../data/")
+# Assumes that we are currently in the same directory as the data set.
 load("ceo_w203.RData")
 
 ```
@@ -107,7 +107,7 @@ There's also a fair amount of outlier CEOs earning more than $2 million.
 
 Another interesting variable to explore is the education of the CEO.
 
-The college variable is a binary variable. Within this sample, we see that more than 97% of CEO's have a college education
+The college variable is a binary variable. This means that if college is 1, then the CEO completed college. Otherwise college is set to 0. Within this sample, we see that more than 97% of CEO's have a college education
 
 ```{r}
 # Calculates percent of CEOs in our data set with a college education
@@ -132,8 +132,10 @@ sum(CEO$grad) / nrow(CEO)
 Because of the minimal amount of data in our data set for CEOs with no education, we will focus education related questions on graduate level education.
 
 ```{r}
-#transforms the grad variable into a factor variable for future analysis
-CEO$grad = as.factor(CEO$grad)
+# Turns grad into a yes vs no variable to make it more interpretable in future analyis.
+
+CEO$unaltered_grad = CEO$grad
+CEO$grad = as.factor(ifelse(CEO$unaltered_grad == 1, "Yes", "No"))
 ```
 
 ##Exploration of company tenure
@@ -167,7 +169,7 @@ summary(CEO$comten)
 
 ```{r}
 ggplot(subset(CEO,ceoten > 0),aes(x = ceoten)) +
-  geom_histogram(color=as.factor(1),binwidth=3) +
+  geom_histogram(color=as.factor(1), bins = 30) +
   ggtitle("CEO's Tenure as CEO at Current Company") +
   labs(x = "CEO's Tenure as CEO", y = "Count of CEO's") 
 ```
@@ -185,7 +187,7 @@ summary(CEO$ceoten)
 We now explore market value.
 
 ```{r}
-ggplot(CEO,aes(x = mktval))+ geom_histogram(binwidth = 1000, color = as.factor(1)) +
+ggplot(CEO,aes(x = mktval))+ geom_histogram(binwidth = 300, color = as.factor(1), na.rm = T) +
   ggtitle("Distribution of 1990 Company Market Values (in Millions of $)") +
    labs(x = "Market Value of Company", y = "Count of Companies")
 ```
@@ -227,7 +229,8 @@ First, we examine the correlation between profits and salary.
 ggplot(CEO,aes(x = salary, y = profits, color = grad)) +
   geom_point(na.rm = T) +stat_smooth(method = "lm", se = F, na.rm = T) +
    ggtitle("Correlation Between 1990 CEO Compensation and Profits") + 
-    labs(x = "CEO Compensation in $1000's", y = "Company Profits in $Millions")
+    labs(x = "CEO Compensation in $1000's", y = "Company Profits in $Millions") +
+     scale_colour_discrete(name = "CEO With \nGrad Degree?")
 ```
 
 ```{r}
