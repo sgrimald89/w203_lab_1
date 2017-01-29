@@ -17,7 +17,7 @@ We were tasked to determine whether company performance is related to a CEO's sa
 
 We operationalize the concept of performance through the use of profits as a proxy for performance.
 
-We will examine whether we can say that a higher salary is related to better company performance.
+We will examine whether we can say that a higher salary is related to better company performance. We will also explore how different variables might potentially interact with both salary and company performance to better understand the true nature of the relationship between salary and company performance.
 
 #Data Modification, Data Encoding, and Dubious Data Points
 
